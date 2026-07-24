@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from dnlssm.visualization.style import PALETTE, publication_style, save_figure
+from dnlssm.visualization.style import PALETTE, format_time_axis, publication_style, save_figure
 
 _MAX_COLS = 4
 _CONFIDENCE_Z = 1.96
@@ -59,7 +59,8 @@ def plot_observation_fit(
                 alpha=0.15,
             )
             ax.set_title(label, fontsize=9)
-            ax.tick_params(axis="x", rotation=30)
+            format_time_axis(ax)
+            ax.tick_params(axis="x", labelsize=7)
 
         for j in range(n_vars, len(axes_flat)):
             axes_flat[j].set_visible(False)

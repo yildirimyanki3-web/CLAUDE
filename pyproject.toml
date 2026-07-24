@@ -57,6 +57,9 @@ include = ["dnlssm*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -q"
+markers = [
+    "integration: full end-to-end pipeline tests (slower; exercise cross-module wiring).",
+]
 
 [tool.ruff]
 line-length = 100

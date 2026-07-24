@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from dnlssm.models.latent import LatentTrajectory
-from dnlssm.visualization.style import PALETTE, publication_style, save_figure
+from dnlssm.visualization.style import PALETTE, format_time_axis, publication_style, save_figure
 
 _MAX_COLS = 3
 _CONFIDENCE_Z = 1.96  # ~95% band under the (approximate) Gaussian marginal
@@ -65,6 +65,7 @@ def plot_latent_trajectories(
             ax.set_xlabel("Time")
             ax.set_ylabel("Latent value (unitless)")
             ax.legend(loc="upper right")
+            format_time_axis(ax)
 
         for j in range(dim, len(axes_flat)):
             axes_flat[j].set_visible(False)
@@ -102,6 +103,7 @@ def plot_ess_timeseries(
         ax.set_ylim(0, 1.05)
         ax.set_title("Particle filter Effective Sample Size")
         ax.legend(loc="lower left")
+        format_time_axis(ax)
         fig.tight_layout()
         return save_figure(fig, output_path)
 

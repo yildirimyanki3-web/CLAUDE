@@ -18,7 +18,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt  # noqa: E402  (backend must be set before pyplot import)
+import matplotlib.dates as mdates  # noqa: E402  (backend must be set before pyplot import)
+import matplotlib.pyplot as plt  # noqa: E402
 
 from dnlssm.utils.logging_config import get_logger  # noqa: E402
 
@@ -67,6 +68,20 @@ def publication_style():
         yield
 
 
+def format_time_axis(ax: plt.Axes) -> None:
+    """Applies a compact, non-overlapping date tick formatter to a time-series axis.
+
+    Every plot in this package that puts a ``DatetimeIndex`` on the x-axis
+    goes through this helper: matplotlib's default tick locator/formatter
+    otherwise renders one label per data point, which overlaps into an
+    unreadable smear for any series longer than a handful of observations
+    (routine for a monthly macroeconomic panel spanning many years).
+    """
+    locator = mdates.AutoDateLocator(maxticks=8)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+
+
 def save_figure(fig: plt.Figure, path: Path) -> Path:
     """Saves ``fig`` to ``path`` (creating parent directories as needed) and closes it.
 
@@ -83,4 +98,4 @@ def save_figure(fig: plt.Figure, path: Path) -> Path:
     return path
 
 
-__all__ = ["publication_style", "save_figure", "PALETTE", "FIGURE_DPI"]
+__all__ = ["publication_style", "save_figure", "format_time_axis", "PALETTE", "FIGURE_DPI"]
