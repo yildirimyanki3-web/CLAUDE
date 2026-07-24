@@ -39,7 +39,11 @@ class WorldBankConnector(DataConnector):
     ) -> pd.Series:
         url = self.BASE_URL_TEMPLATE.format(country=self._country_code, indicator=series_code)
         end_year = end_date.year if end_date is not None else date.today().year
-        params = {"format": "json", "per_page": 20000, "date": f"{start_date.year}:{end_year}"}
+        params: dict[str, str | int] = {
+            "format": "json",
+            "per_page": 20000,
+            "date": f"{start_date.year}:{end_year}",
+        }
 
         try:
             response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT_SECONDS)

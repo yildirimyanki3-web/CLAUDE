@@ -47,7 +47,7 @@ def parse_sdmx_json_single_series(payload: dict, series_code: str) -> pd.Series:
         raise DataFetchError(f"SDMX-JSON response for '{series_code}' has an empty observations map.")
 
     dates: list[str] = []
-    values: list[float] = []
+    values: list[float | None] = []
     for time_index_str, obs_array in observations.items():
         time_index = int(time_index_str)
         if time_index >= len(time_values):

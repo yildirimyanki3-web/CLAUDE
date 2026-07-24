@@ -118,7 +118,8 @@ def build_experiment_report(context: ReportContext) -> str:
         lines.append(f"Candidate latent dimensions evaluated: {[r.latent_dim for r in res.per_dimension]}")
         lines.append(f"**Selected latent dimension: {res.selected_dim}**")
         lines.append("")
-        lines.append(res.comparison_table.to_markdown(index=False))
+        if res.comparison_table is not None:
+            lines.append(res.comparison_table.to_markdown(index=False))
     else:
         lines.append("Model selection was not run in this experiment (a fixed latent_dim was used).")
 
@@ -147,7 +148,7 @@ def build_experiment_report(context: ReportContext) -> str:
 
     lines.append(_section("6. Parameter Confidence Intervals (Hessian-based)"))
     ci = context.confidence_intervals
-    if ci is not None and ci.available:
+    if ci is not None and ci.available and ci.standard_errors is not None:
         lines.append(f"Confidence level: {ci.confidence_level:.0%}. Standard errors and intervals computed for "
                      f"{len(ci.standard_errors)} parameters.")
         lines.append(f"Median standard error: {_fmt(pd.Series(ci.standard_errors).median())}")

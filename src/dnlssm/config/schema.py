@@ -39,6 +39,14 @@ StandardizationLiteral = Literal["zscore", "minmax", "robust", "none"]
 MissingDataLiteral = Literal["linear_interpolate", "ffill", "kalman_impute", "drop"]
 
 
+def _default_optimizer_methods() -> list[OptimizerLiteral]:
+    return ["L-BFGS-B", "Nelder-Mead"]
+
+
+def _default_observation_noise_alternatives() -> list[NoiseStructureLiteral]:
+    return ["diagonal", "scalar", "full"]
+
+
 class RuntimeConfig(BaseModel):
     """Global run identity, reproducibility, and I/O settings."""
 
@@ -191,7 +199,7 @@ class ModelConfig(BaseModel):
 class OptimizationConfig(BaseModel):
     """Multi-start Maximum Likelihood Estimation policy."""
 
-    methods: list[OptimizerLiteral] = Field(default_factory=lambda: ["L-BFGS-B", "Nelder-Mead"])
+    methods: list[OptimizerLiteral] = Field(default_factory=_default_optimizer_methods)
     n_multistarts: int = Field(default=8, ge=1)
     max_iterations: int = Field(default=500, ge=1)
     function_tolerance: float = Field(default=1e-8, gt=0.0)
@@ -255,7 +263,7 @@ class DiagnosticsConfig(BaseModel):
     acf_pacf_max_lags: int = Field(default=24, ge=1)
     arch_test_lags: int = Field(default=12, ge=1)
     observation_noise_alternatives: list[NoiseStructureLiteral] = Field(
-        default_factory=lambda: ["diagonal", "scalar", "full"]
+        default_factory=_default_observation_noise_alternatives
     )
 
 

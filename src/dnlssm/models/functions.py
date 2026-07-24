@@ -14,13 +14,14 @@ name.
 from __future__ import annotations
 
 import abc
+from collections.abc import Callable
 
 import numpy as np
 
 from dnlssm.config.schema import NonlinearFunctionConfig
 from dnlssm.utils.numerical import softplus
 
-_ACTIVATIONS = {
+_ACTIVATIONS: dict[str, Callable[[np.ndarray], np.ndarray]] = {
     "tanh": np.tanh,
     "relu": lambda x: np.maximum(0.0, x),
     "softplus": softplus,

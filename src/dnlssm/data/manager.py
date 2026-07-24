@@ -29,7 +29,13 @@ from dnlssm.data.connectors import (
     WorldBankConnector,
 )
 from dnlssm.data.credentials import ProviderCredentials
-from dnlssm.data.provenance import ProvenanceLog, ProvenanceRecord, ProviderAttempt, date_range_str
+from dnlssm.data.provenance import (
+    ProvenanceLog,
+    ProvenanceRecord,
+    ProvenanceStatus,
+    ProviderAttempt,
+    date_range_str,
+)
 from dnlssm.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -106,6 +112,7 @@ class DataManager:
                 )
                 continue
 
+            series_code: str | None
             if provider == "manual":
                 series_code = variable.canonical_id  # manual files are named by canonical_id
             else:
@@ -154,7 +161,7 @@ class DataManager:
                 continue
 
             attempts.append(ProviderAttempt(provider=provider, series_code=series_code, status="success"))
-            status = "manual_upload" if provider == "manual" else "success"
+            status: ProvenanceStatus = "manual_upload" if provider == "manual" else "success"
             record = ProvenanceRecord(
                 canonical_id=variable.canonical_id,
                 status=status,

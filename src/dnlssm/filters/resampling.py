@@ -37,7 +37,7 @@ def stratified_resample(weights: np.ndarray, rng: np.random.Generator) -> np.nda
 def multinomial_resample(weights: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Plain multinomial resampling: ``n`` i.i.d. draws from ``Categorical(weights)``."""
     n = weights.shape[0]
-    return rng.choice(n, size=n, replace=True, p=weights)
+    return np.asarray(rng.choice(n, size=n, replace=True, p=weights))
 
 
 def residual_resample(weights: np.ndarray, rng: np.random.Generator) -> np.ndarray:
