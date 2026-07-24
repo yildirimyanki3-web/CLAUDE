@@ -1,0 +1,15 @@
+services:
+  dnlssm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dnlssm-research:latest
+    container_name: dnlssm-research
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./experiments_output:/opt/dnlssm/experiments_output
+      - ./data:/opt/dnlssm/data
+      - ./config:/opt/dnlssm/config
+    command: ["run", "--config", "config/experiment_config.yaml"]

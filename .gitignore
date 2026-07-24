@@ -1,0 +1,60 @@
+## Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+## Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+## Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.mypy_cache/
+.ruff_cache/
+
+## Environment / secrets
+.env
+.env.*
+!.env.example
+
+## Data caches (raw pulls are not committed; provenance metadata is)
+data/raw/
+data/cache/
+*.parquet.tmp
+
+## Experiment outputs (each run is reproducible from config + seed; large artifacts not versioned)
+experiments_output/*
+!experiments_output/.gitkeep
+
+## OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+## Jupyter
+.ipynb_checkpoints/

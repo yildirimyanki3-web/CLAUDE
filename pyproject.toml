@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel>=0.42.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dnlssm-research"
+version = "0.1.0"
+description = "Dynamic Nonlinear State Space Model research platform for macroeconomic latent-structure estimation"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "DNLSSM Research Project" }]
+keywords = [
+    "state-space-model",
+    "particle-filter",
+    "econometrics",
+    "maximum-likelihood",
+    "reproducible-research",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy==2.4.6",
+    "scipy==1.17.1",
+    "pandas==3.0.5",
+    "statsmodels==0.14.6",
+    "matplotlib==3.11.1",
+    "pyyaml==6.0.1",
+    "pydantic==2.13.4",
+    "requests==2.33.1",
+    "numdifftools==0.9.42",
+    "openpyxl==3.1.5",
+    "python-dotenv==1.2.2",
+    "tabulate==0.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.0",
+    "mypy==2.3.0",
+]
+
+[project.scripts]
+dnlssm-run = "dnlssm.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dnlssm*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "NPY"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true

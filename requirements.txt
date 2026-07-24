@@ -1,0 +1,25 @@
+# Core numerical / scientific stack
+numpy==2.4.6
+scipy==1.17.1
+pandas==3.0.5
+statsmodels==0.14.6
+
+# Visualization
+matplotlib==3.11.1
+
+# Configuration and validation
+pyyaml==6.0.1
+pydantic==2.13.4
+
+# Data acquisition
+requests==2.33.1
+python-dotenv==1.2.2
+openpyxl==3.1.5
+
+# Numerical differentiation (Hessian-based confidence intervals)
+numdifftools==0.9.42
+
+# Reporting
+tabulate==0.10.0
+
+# -- Development / testing (optional, install with requirements-dev.txt) --

@@ -1,0 +1,282 @@
+# =============================================================================
+# Observation-space variable registry
+# =============================================================================
+# This file is the single source of truth for the 17-variable observation
+# space described in the research design. Each entry becomes one column of
+# the observation matrix built by dnlssm.preprocessing.observation_matrix.
+#
+# IMPORTANT — series_code fields:
+#   Connector *code* (HTTP request construction, parsing, retry policy) is
+#   fully implemented for every provider listed below (see
+#   src/dnlssm/data/connectors/). However, the *exact* provider-native series
+#   identifier for several Turkey-specific series (TCMB EVDS codes in
+#   particular) must be verified by the researcher against the provider's
+#   own data catalogue before a production run, because these codes are
+#   periodically renumbered and an unverified guess could silently pull the
+#   wrong series. Entries with `series_code: null` are therefore treated by
+#   the DataManager as "not yet configured": they are skipped, reported
+#   explicitly in the provenance log, and the affected variable must be
+#   supplied either by filling in series_code here or via a manual
+#   CSV/Excel upload (see src/dnlssm/data/connectors/manual_upload.py).
+#   This is a deliberate design choice: shipping a guessed code that looks
+#   authoritative is worse than an explicit, auditable gap.
+#
+# All series are aligned to a common monthly (month-start, "MS") grid by the
+# preprocessing pipeline regardless of native_frequency.
+# =============================================================================
+
+variables:
+
+  - canonical_id: policy_rate
+    description: "Policy interest rate (TCMB one-week repo rate)"
+    unit: percent
+    native_frequency: monthly
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TCMB EVDS interactive query: search 'politika faizi' / 1-week repo rate; verify series code before use."
+      - provider: manual
+        series_code: null
+        notes: "CSV/Excel upload fallback; see data/manual_uploads/README.md."
+
+  - canonical_id: credit_or_money_supply
+    description: "Domestic credit volume or broad money supply (M3)"
+    unit: TRY_million
+    native_frequency: monthly
+    transform: log
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TCMB EVDS banking sector loan volume or M3 money supply aggregate; verify series code."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: cpi_index
+    description: "Consumer Price Index (TUFE), general index level; converted to inflation via log_diff transform"
+    unit: index_2003_100
+    native_frequency: monthly
+    transform: log_diff
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TCMB EVDS / TUIK TUFE general index; verify series code."
+      - provider: imf_ifs
+        series_code: null
+        notes: "IMF IFS dataset, indicator PCPI_IX, reference area TR; verify SDMX key components."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: usdtry_fx
+    description: "USD/TRY exchange rate, monthly average of daily quotations"
+    unit: TRY_per_USD
+    native_frequency: daily
+    transform: log
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: fred
+        series_code: DEXTRUS
+        notes: "FRED 'Turkish Lira to U.S. Dollar Spot Exchange Rate'; confirm series ID is current on fred.stlouisfed.org before use."
+      - provider: evds
+        series_code: null
+        notes: "TCMB EVDS USD buying/selling exchange rate as an alternative primary source."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: current_account_balance
+    description: "Current account balance"
+    unit: USD_million
+    native_frequency: monthly
+    transform: none
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TCMB balance of payments, current account balance; verify series code."
+      - provider: imf_ifs
+        series_code: null
+        notes: "IMF IFS, indicator BCA_BP6_USD, reference area TR."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: central_gov_budget_balance
+    description: "Central government budget balance"
+    unit: TRY_million
+    native_frequency: monthly
+    transform: none
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "Ministry of Treasury and Finance budget realizations, mirrored in EVDS public finance category."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: public_debt_gdp
+    description: "General government (public) debt as a share of GDP"
+    unit: percent_of_gdp
+    native_frequency: quarterly
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: world_bank
+        series_code: GC.DOD.TOTL.GD.ZS
+        notes: "World Bank WDI indicator, annual frequency; interpolated onto the monthly grid by preprocessing."
+      - provider: evds
+        series_code: null
+      - provider: manual
+        series_code: null
+
+  - canonical_id: private_debt_gdp
+    description: "Private (non-financial corporate + household) sector debt as a share of GDP"
+    unit: percent_of_gdp
+    native_frequency: quarterly
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: bis
+        series_code: null
+        notes: "BIS 'Credit to the non-financial sector' long series, private non-financial sector credit/GDP, Turkey; verify SDMX dimension key."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: industrial_production_index
+    description: "Industrial production index"
+    unit: index
+    native_frequency: monthly
+    transform: log
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: oecd_sdmx
+        series_code: PRINTO01
+        notes: "OECD MEI dataset, 'Production of total industry', Turkey; verify SDMX key components (subject/measure/frequency)."
+      - provider: evds
+        series_code: null
+      - provider: manual
+        series_code: null
+
+  - canonical_id: unemployment_rate
+    description: "Unemployment rate"
+    unit: percent
+    native_frequency: monthly
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TUIK labour force statistics, seasonally-adjusted unemployment rate, mirrored in EVDS."
+      - provider: world_bank
+        series_code: SL.UEM.TOTL.ZS
+        notes: "World Bank modeled ILO estimate, annual frequency; fallback only, coarser than the TUIK monthly series."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: exports
+    description: "Merchandise exports"
+    unit: USD_million
+    native_frequency: monthly
+    transform: log
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TUIK foreign trade statistics, exports; mirrored in EVDS foreign trade category."
+      - provider: world_bank
+        series_code: NE.EXP.GNFS.CD
+        notes: "World Bank WDI, annual frequency; fallback only."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: imports
+    description: "Merchandise imports"
+    unit: USD_million
+    native_frequency: monthly
+    transform: log
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+      - provider: world_bank
+        series_code: NE.IMP.GNFS.CD
+        notes: "World Bank WDI, annual frequency; fallback only."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: tax_burden_gdp
+    description: "Tax revenue as a share of GDP"
+    unit: percent_of_gdp
+    native_frequency: annual
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    provider_priority:
+      - provider: world_bank
+        series_code: GC.TAX.TOTL.GD.ZS
+        notes: "World Bank WDI indicator, annual frequency; interpolated onto the monthly grid by preprocessing."
+      - provider: evds
+        series_code: null
+      - provider: manual
+        series_code: null
+
+  - canonical_id: real_wage_index
+    description: "Real wage index"
+    unit: index
+    native_frequency: monthly
+    transform: log
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TUIK / Ministry of Labour real wage index, mirrored in EVDS where available."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: capacity_utilization_rate
+    description: "Manufacturing industry capacity utilization rate"
+    unit: percent
+    native_frequency: monthly
+    transform: none
+    standardize: true
+    seasonal_adjust: true
+    provider_priority:
+      - provider: evds
+        series_code: null
+        notes: "TCMB manufacturing industry capacity utilization survey; verify series code."
+      - provider: manual
+        series_code: null
+
+  - canonical_id: economic_complexity_index
+    description: "Economic Complexity Index (ECI)"
+    unit: index
+    native_frequency: annual
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    is_placeholder: true
+    provider_priority: []
+
+  - canonical_id: structural_orientation_index
+    description: "Structural Orientation (Specialization) Index -- to be defined by the researcher"
+    unit: index
+    native_frequency: annual
+    transform: none
+    standardize: true
+    seasonal_adjust: false
+    is_placeholder: true
+    provider_priority: []
