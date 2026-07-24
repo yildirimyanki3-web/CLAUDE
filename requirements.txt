@@ -21,5 +21,6 @@ numdifftools==0.9.42
 
 # Reporting
 tabulate==0.10.0
+jinja2==3.1.6
 
 # -- Development / testing (optional, install with requirements-dev.txt) --
