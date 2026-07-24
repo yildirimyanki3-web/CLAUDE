@@ -49,6 +49,31 @@ class TestAgainstExactKalmanFilter:
         np.testing.assert_allclose(pf_result.filtered_mean, kf.filtered_means, atol=0.15)
         assert abs(pf_result.log_likelihood - kf.log_likelihood) < 1.0
 
+    def test_one_step_ahead_prediction_matches_kalman_predicted_moments(self) -> None:
+        """predicted_observation_mean/cov must match H @ predicted_state + b, H P H^T + R --
+        the Kalman filter's *prior* (not posterior) predictive moments -- since this quantity
+        is used for genuinely out-of-sample scoring and must not leak information from y_t.
+        """
+        latent_dim, obs_dim, n_time = 2, 3, 15
+        model, theta = _build_stable_linear_model(latent_dim, obs_dim)
+        observations = _simulate(model, theta, n_time, seed=123)
+
+        blocks = model.layout.split(theta)
+        F, b_f = unpack_linear_function(blocks["transition"], latent_dim, latent_dim)
+        H, b_g = unpack_linear_function(blocks["observation"], latent_dim, obs_dim)
+        Q, R = model.process_noise_cov(theta), model.observation_noise_cov(theta)
+        mean0, cov0 = model.initial_state_moments(theta)
+        kf = kalman_filter_linear_gaussian(observations, F, b_f, Q, H, b_g, R, mean0, cov0)
+
+        expected_pred_obs_mean = kf.predicted_means @ H.T + b_g
+        expected_pred_obs_cov = np.einsum("ij,tjk,lk->til", H, kf.predicted_covs, H) + R[None, :, :]
+
+        pf_config = ParticleFilterConfig(n_particles=8000, ess_threshold_ratio=0.5)
+        pf_result = BootstrapParticleFilter(model, pf_config).run(observations, theta, np.random.default_rng(7))
+
+        np.testing.assert_allclose(pf_result.predicted_observation_mean, expected_pred_obs_mean, atol=0.2)
+        np.testing.assert_allclose(pf_result.predicted_observation_cov, expected_pred_obs_cov, atol=0.3)
+
     def test_handles_missing_observation_dimensions_like_kalman_filter(self) -> None:
         latent_dim, obs_dim, n_time = 2, 4, 12
         model, theta = _build_stable_linear_model(latent_dim, obs_dim, seed=1)
@@ -84,6 +109,8 @@ class TestParticleFilterContract:
         assert result.weight_history.shape == (n_time, n_particles)
         assert result.ancestor_history.shape == (n_time - 1, n_particles)
         assert result.log_likelihood_per_timestep.shape == (n_time,)
+        assert result.predicted_observation_mean.shape == (n_time, obs_dim)
+        assert result.predicted_observation_cov.shape == (n_time, obs_dim, obs_dim)
 
     def test_dimension_mismatch_raises(self) -> None:
         model, theta = _build_stable_linear_model(2, 3)

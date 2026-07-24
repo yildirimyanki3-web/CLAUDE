@@ -50,6 +50,8 @@ class FilterResult:
     particle_history: np.ndarray  # (T, n_particles, latent_dim) -- pre-resample positions
     weight_history: np.ndarray  # (T, n_particles) -- normalized filtering weights, pre-resample
     ancestor_history: np.ndarray  # (T-1, n_particles) int -- parent index at t for each particle at t+1
+    predicted_observation_mean: np.ndarray  # (T, observation_dim) -- E[y_t | y_1:t-1], genuine one-step-ahead forecast
+    predicted_observation_cov: np.ndarray  # (T, observation_dim, observation_dim) -- Var[y_t | y_1:t-1]
     diagnostics: ParticleDiagnosticsSummary
     n_particles: int
 
@@ -82,6 +84,7 @@ class BootstrapParticleFilter:
 
         n_time = observations.shape[0]
         latent_dim = self._model.latent_dim
+        observation_dim = self._model.observation_dim
 
         process_noise_cov = self._model.process_noise_cov(theta)
         observation_noise_cov = self._model.observation_noise_cov(theta)
@@ -97,6 +100,8 @@ class BootstrapParticleFilter:
         ancestor_history = np.empty((max(n_time - 1, 0), n_particles), dtype=np.int64)
         filtered_mean = np.empty((n_time, latent_dim))
         filtered_cov = np.empty((n_time, latent_dim, latent_dim))
+        predicted_observation_mean = np.empty((n_time, observation_dim))
+        predicted_observation_cov = np.empty((n_time, observation_dim, observation_dim))
         ess = np.empty(n_time)
         entropy = np.empty(n_time)
         norm_entropy = np.empty(n_time)
@@ -112,8 +117,20 @@ class BootstrapParticleFilter:
             y_t = observations[t]
             observed_mask = ~np.isnan(y_t)
 
+            # Computed unconditionally (not just when y_t has observed entries): this is the
+            # genuine one-step-ahead forecast E[y_t | y_1:t-1], using only the weights carried
+            # in from t-1 -- i.e. it does NOT use y_t itself, unlike the post-update filtered
+            # estimate. This is what out-of-sample scoring (dnlssm.model_selection) and
+            # innovation-residual diagnostics (dnlssm.diagnostics) must condition on.
+            predicted_obs = self._model.observation_mean(particles, theta)
+            weights_prior = np.exp(log_weights)
+            predicted_observation_mean[t] = np.average(predicted_obs, axis=0, weights=weights_prior)
+            centered_obs = predicted_obs - predicted_observation_mean[t]
+            predicted_observation_cov[t] = (
+                (centered_obs * weights_prior[:, None]).T @ centered_obs + observation_noise_cov
+            )
+
             if observed_mask.any():
-                predicted_obs = self._model.observation_mean(particles, theta)
                 residuals = y_t[observed_mask][None, :] - predicted_obs[:, observed_mask]
                 cov_obs = observation_noise_cov[np.ix_(observed_mask, observed_mask)]
                 log_increment = gaussian_log_pdf(residuals, cov_obs)
@@ -164,6 +181,8 @@ class BootstrapParticleFilter:
             particle_history=particle_history,
             weight_history=weight_history,
             ancestor_history=ancestor_history,
+            predicted_observation_mean=predicted_observation_mean,
+            predicted_observation_cov=predicted_observation_cov,
             diagnostics=diagnostics,
             n_particles=n_particles,
         )
