@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date
 
 import pandas as pd
-import pytest
 
 from dnlssm.config.schema import ObservationSpaceConfig, ProviderSeries, VariableSpec
 from dnlssm.data.base import DataConnector, DataFetchError

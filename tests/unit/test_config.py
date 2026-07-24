@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pydantic
 import pytest
 
 from dnlssm.config import load_experiment_config, load_variable_registry
@@ -28,7 +29,7 @@ class TestShippedConfigLoads:
 
 class TestVariableSpecValidation:
     def test_non_placeholder_requires_provider(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(pydantic.ValidationError):
             VariableSpec(
                 canonical_id="x",
                 description="x",
@@ -58,7 +59,7 @@ class TestObservationSpaceConfig:
             native_frequency="monthly",
             provider_priority=[{"provider": "manual"}],
         )
-        with pytest.raises(Exception):
+        with pytest.raises(pydantic.ValidationError):
             ObservationSpaceConfig(
                 start_date="2020-01-01",
                 variables=[
@@ -68,13 +69,13 @@ class TestObservationSpaceConfig:
             )
 
     def test_empty_variable_list_rejected(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(pydantic.ValidationError):
             ObservationSpaceConfig(start_date="2020-01-01", variables=[])
 
 
 class TestModelSelectionConfig:
     def test_dim_range_validated(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(pydantic.ValidationError):
             ModelSelectionConfig(latent_dim_min=8, latent_dim_max=3)
 
     def test_candidate_dims_inclusive(self) -> None:

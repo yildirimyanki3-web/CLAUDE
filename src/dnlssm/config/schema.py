@@ -91,7 +91,7 @@ class VariableSpec(BaseModel):
     provider_priority: list[ProviderSeries] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _placeholder_has_no_providers_or_is_explicit(self) -> "VariableSpec":
+    def _placeholder_has_no_providers_or_is_explicit(self) -> VariableSpec:
         if not self.is_placeholder and not self.provider_priority:
             raise ValueError(
                 f"Variable '{self.canonical_id}' is not a placeholder but declares no "
@@ -137,7 +137,7 @@ class PreprocessingConfig(BaseModel):
     winsorize_upper_quantile: float | None = Field(default=None, ge=0.5, le=1.0)
 
     @model_validator(mode="after")
-    def _winsorize_bounds_consistent(self) -> "PreprocessingConfig":
+    def _winsorize_bounds_consistent(self) -> PreprocessingConfig:
         lo, hi = self.winsorize_lower_quantile, self.winsorize_upper_quantile
         if (lo is None) != (hi is None):
             raise ValueError("winsorize_lower_quantile and winsorize_upper_quantile must both be set or both be null.")
@@ -237,7 +237,7 @@ class ModelSelectionConfig(BaseModel):
     )
 
     @model_validator(mode="after")
-    def _dim_range_consistent(self) -> "ModelSelectionConfig":
+    def _dim_range_consistent(self) -> ModelSelectionConfig:
         if self.latent_dim_min > self.latent_dim_max:
             raise ValueError("latent_dim_min must be <= latent_dim_max.")
         return self

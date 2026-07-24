@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from dnlssm.config.schema import ObservationSpaceConfig, PreprocessingConfig, ProviderSeries, VariableSpec
+from dnlssm.config.schema import (
+    ObservationSpaceConfig,
+    PreprocessingConfig,
+    ProviderSeries,
+    VariableSpec,
+)
 from dnlssm.preprocessing.alignment import align_to_monthly
 from dnlssm.preprocessing.exceptions import PreprocessingError
 from dnlssm.preprocessing.missing import impute_series, longest_consecutive_gap, summarize_missing

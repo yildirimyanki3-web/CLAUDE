@@ -41,7 +41,7 @@ class LatentManifold:
         return [f"State {i + 1}" for i in range(self.dim)]
 
     @classmethod
-    def default(cls, dim: int) -> "LatentManifold":
+    def default(cls, dim: int) -> LatentManifold:
         return cls(manifold_id=_DEFAULT_MANIFOLD_ID, dim=dim)
 
 

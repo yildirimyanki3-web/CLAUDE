@@ -7,15 +7,17 @@ seed-management strategy, and one set of numerically robust primitives
 reimplementing them ad hoc.
 """
 
-from dnlssm.utils.logging_config import get_logger, configure_logging
-from dnlssm.utils.random_state import SeedSequence, spawn_generator
+from dnlssm.utils.logging_config import configure_logging, get_logger
 from dnlssm.utils.numerical import (
+    gaussian_log_pdf,
     log_sum_exp,
+    normalize_log_weights,
     regularize_covariance,
     safe_cholesky,
+    sequential_importance_weight_update,
     softplus,
-    normalize_log_weights,
 )
+from dnlssm.utils.random_state import SeedSequence, spawn_generator
 
 __all__ = [
     "get_logger",
@@ -27,4 +29,6 @@ __all__ = [
     "safe_cholesky",
     "softplus",
     "normalize_log_weights",
+    "gaussian_log_pdf",
+    "sequential_importance_weight_update",
 ]

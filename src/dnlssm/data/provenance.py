@@ -11,7 +11,7 @@ to "which source did each column of the observation matrix come from".
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Literal
 
 import pandas as pd
@@ -48,7 +48,7 @@ class ProvenanceRecord:
     n_observations: int = 0
     date_range: tuple[str, str] | None = None
     fetched_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds")
+        default_factory=lambda: datetime.now(UTC).isoformat(timespec="seconds")
     )
 
     def to_dict(self) -> dict:

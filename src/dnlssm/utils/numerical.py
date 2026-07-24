@@ -127,6 +127,75 @@ def inverse_softplus(y: np.ndarray) -> np.ndarray:
     return y + np.log(-np.expm1(-y))
 
 
+def gaussian_log_pdf(residuals: np.ndarray, cov: np.ndarray, epsilon: float = 1e-6) -> np.ndarray:
+    """Batched, numerically stable multivariate Gaussian log-density at zero-mean residuals.
+
+    Uses a Cholesky factor of ``cov`` and triangular solves rather than an
+    explicit matrix inverse, avoiding both the extra numerical error of
+    inversion and its ``O(k^3)`` cost being paid unnecessarily per particle.
+
+    Parameters
+    ----------
+    residuals:
+        ``(k,)`` or ``(n, k)`` -- one or many residual vectors ``y - mean``.
+    cov:
+        ``(k, k)`` covariance matrix (regularized internally via
+        :func:`safe_cholesky` before factorization).
+
+    Returns
+    -------
+    Log-density values, shape ``(n,)`` (or scalar-equivalent ``(1,)`` for a
+    single residual vector -- callers batch via ``np.atleast_2d`` upstream).
+    """
+    residuals_2d = np.atleast_2d(np.asarray(residuals, dtype=np.float64))
+    k = cov.shape[-1]
+    chol = safe_cholesky(cov, epsilon=epsilon)
+    z = sla.solve_triangular(chol, residuals_2d.T, lower=True)  # (k, n)
+    with np.errstate(over="ignore"):
+        # A residual many orders of magnitude larger than the noise std (a
+        # genuinely incompatible observation, e.g. a unit-mismatch or corrupt
+        # data point) can overflow z**2 to +inf; the resulting -inf log-density
+        # is the mathematically correct answer, not a bug, and is handled
+        # explicitly by callers (see sequential_importance_weight_update).
+        quadratic_form = np.sum(z * z, axis=0)  # (n,)
+    log_det_cov = 2.0 * np.sum(np.log(np.diag(chol)))
+    log_norm_const = k * np.log(2.0 * np.pi) + log_det_cov
+    return -0.5 * (log_norm_const + quadratic_form)
+
+
+def sequential_importance_weight_update(
+    log_weights_prev: np.ndarray, log_increment: np.ndarray
+) -> tuple[np.ndarray, float]:
+    """One step of the sequential Monte Carlo weight recursion.
+
+    Implements ``W_t^i \\propto W_{t-1}^i \\cdot w_t(x_t^i)`` in log space and
+    returns the corresponding marginal-likelihood increment
+    ``log( sum_i W_{t-1}^i w_t(x_t^i) )``. Unlike :func:`normalize_log_weights`
+    (which assumes the incoming log-weights represent a *fresh*, uniformly
+    weighted particle set, i.e. the special case right after resampling),
+    this function makes no assumption about ``log_weights_prev`` beyond it
+    representing a valid (possibly non-uniform, carried-forward-without-
+    resampling) set of log-weights -- the general case a bootstrap particle
+    filter with *adaptive* resampling must handle at every time step.
+    """
+    log_weights_prev = np.asarray(log_weights_prev, dtype=np.float64)
+    log_increment = np.asarray(log_increment, dtype=np.float64)
+    combined = log_weights_prev + log_increment
+    log_norm_prev = float(log_sum_exp(log_weights_prev))
+    log_norm_combined = float(log_sum_exp(combined))
+    if not np.isfinite(log_norm_combined):
+        raise FloatingPointError(
+            "All particle weights collapsed to zero likelihood at this time step "
+            "(every particle's predicted observation is incompatible with the data "
+            "under the current noise covariance). Consider increasing n_particles, "
+            "increasing process/observation noise, or checking for outliers/unit "
+            "mismatches in the observation at this time step."
+        )
+    log_likelihood_increment = log_norm_combined - log_norm_prev
+    new_log_weights = combined - log_norm_combined
+    return new_log_weights, log_likelihood_increment
+
+
 __all__ = [
     "log_sum_exp",
     "normalize_log_weights",
@@ -134,4 +203,6 @@ __all__ = [
     "safe_cholesky",
     "softplus",
     "inverse_softplus",
+    "gaussian_log_pdf",
+    "sequential_importance_weight_update",
 ]
