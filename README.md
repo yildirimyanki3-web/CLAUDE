@@ -211,6 +211,15 @@ interactive query system before a production run, or supply the series via
 manual upload. The pipeline reports, itemized, exactly which series this
 affects on every run.
 
+To speed up that lookup, `scripts/evds_excel_export.py` searches the EVDS
+series catalogue, ranks candidates per variable by keyword/frequency/start-date
+heuristics, and writes an Excel workbook (`data/raw/evds_veri.xlsx`) with the
+top pick's data, its metadata, and every ranked alternative. It is a
+discovery aid only — it never writes to `variables.yaml` — so verify a
+candidate against the EVDS interactive query system before copying its code
+into the `evds` entry's `series_code` field. See the module docstring for
+usage, including `--ara <keyword>` for a plain catalogue search.
+
 ## Running the pipeline
 
 ```bash
